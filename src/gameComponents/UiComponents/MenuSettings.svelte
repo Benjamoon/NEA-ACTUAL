@@ -22,6 +22,7 @@
         "particle": true,
         "ultrarender": false
     } // The default values for these settings
+    // Server saved vaues will overwrite these
 
     
 
@@ -57,7 +58,7 @@
     let settingsLoading = false
     onMount(async ()=>{
         //Get settings from server
-        settingsLoading = "Fetching settings"
+        settingsLoading = "Fetching settings" // Give us some status loading text
 
         let result = await fetch(`/api/user/${user}/settings/`, {
             method: "GET",
@@ -71,8 +72,6 @@
 
         if (response.ok == true) {
             //Success got settings, so act accordingly!
-            console.table(response)
-
             if (response.settings == false) { // user had no settings so keep defaults
                 settingsLoading = false
                 return

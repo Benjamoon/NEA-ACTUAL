@@ -1,14 +1,7 @@
-<script>
+<script defer>
     import { createEventDispatcher, onMount } from "svelte";
-    import { 
-        Scene,
-        PerspectiveCamera,
-        WebGLRenderer,
-        BoxGeometry,
-        MeshBasicMaterial,
-        Mesh,
-        PlaneGeometry
-    } from 'three';
+    import * as THREE from 'three';
+    import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls.js"
 
     const dispatch = createEventDispatcher()
 
@@ -18,72 +11,123 @@
     
     let currentScene = "menu"
 
+    let controls
+    let renderer
+    const scenes = {}
+    const cameras = {}
+    const animationThreads = {}
+
+
+    //create the gameplay scene so we can start generating map content
+        
+    scenes.play = new THREE.Scene
+    cameras.play = new THREE.PerspectiveCamera(105, window.innerWidth / window.innerHeight, 0.1, 1000)
+    const playObjects = {}
+
+    const geometry = new THREE.BoxGeometry( 100, 0.1, 100 ); 
+
+    const texture = new THREE.TextureLoader().load( "textures/floor.png" );
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set( 8, 8 );
+
+    const material = new THREE.MeshBasicMaterial( { map: texture } );
+    playObjects.floor = new THREE.Mesh( geometry, material ); 
+    scenes.play.add( playObjects.floor ).position.y = -2; 
+
+    const controlKeysDown = {}
+
+    const setupPlayControls = ()=>{
+        controls = new PointerLockControls(cameras.play, renderer.domElement)
+        controls.addEventListener( 'lock', ()=>{
+            console.log("Lock")
+        } );
+
+        window.addEventListener("mousedown", ()=>{
+            if (gameState == "Play") {
+                controls.lock()
+            }
+        })
+
+        window.addEventListener("keydown", (e)=>{
+            console.log("down", e.key)
+            if (gameState == "Play" && controls.isLocked) {
+                controlKeysDown[e.key.toLowerCase()] = true
+            }
+        })
+
+        window.addEventListener("keyup", (e)=>{
+            console.log("up", e.key)
+            controlKeysDown[e.key.toLowerCase()] = false
+        })
+    }
+
+    const checkCollision = ()=>{
+    }
+
+    animationThreads.play = () => {
+        const lastX = cameras.play.position.x
+        const lastY = cameras.play.position.x
+
+        const speed = 0.1
+        if (controlKeysDown["Shift"]) {
+            speed = 0.3
+        }
+
+        if (controlKeysDown["w"]) {
+            cameras.play.translateZ(-speed)
+        }
+        if (controlKeysDown["s"]) {
+            cameras.play.translateZ(speed)
+        }
+        if (controlKeysDown["d"]) {
+            cameras.play.translateX(speed)
+        }
+        if (controlKeysDown["a"]) {
+            cameras.play.translateX(-speed)
+        }
+        if (cameras.play.position.x != lastX || cameras.play.position.y != lastY) {
+            //reset height, disallow height changes (workaround for now)
+            cameras.play.position.y = 0
+            checkCollision()
+        }
+    }    
 
 
 
     onMount(()=>{
 
-        const scenes = {}
-        const cameras = {}
-        const animationThreads = {}
-
         const canvasElement = document.getElementById("renderContent") 
 
-    
+
         //three.js
-        const renderer = new WebGLRenderer( {
+        renderer = new THREE.WebGLRenderer( {
             canvas: canvasElement
         });
         renderer.setSize( window.innerWidth, window.innerHeight );
+        setupPlayControls()
 
         //Menu
 
         const menuObjects = {}
-        scenes.menu = new Scene
-        cameras.menu = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
+        scenes.menu = new THREE.Scene
+        cameras.menu = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
 
-        const geometry = new BoxGeometry( 1, 1, 1 ); 
-        const material = new MeshBasicMaterial( { color: 0x00ff00 } ); 
-        menuObjects.cube = new Mesh( geometry, material ); 
+        const geometry = new THREE.BoxGeometry( 1, 1, 1 ); 
+        const material = new THREE.MeshBasicMaterial( { color: 0xEC3D18 } ); 
+        menuObjects.cube = new THREE.Mesh( geometry, material ); 
         scenes.menu.add( menuObjects.cube ); 
         cameras.menu.position.z = 3;
 
         animationThreads.menu = () =>{
-            menuObjects.cube.rotation.x += 0.01;
-            menuObjects.cube.rotation.y += 0.01;
+            menuObjects.cube.rotation.x += 0.1;
+            menuObjects.cube.rotation.y += 0.1;
         }
 
         //Load
-        scenes.load = new Scene
-        cameras.load = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
-
-        //create the gameplay scene so we can start generating map content
-        scenes.play = new Scene
-        cameras.play = new PerspectiveCamera(105, window.innerWidth / window.innerHeight, 0.1, 1000)
-        let playObjects = {}
-
-        const loadGame = async ()=>{
-            const FloorGeometry = PlaneGeometry(1000, 1000)
-            const FloorMaterial = new MeshBasicMaterial( {color: 0xffff00} );
-            playObjects.floor_plane = new Mesh(FloorGeometry, FloorMaterial)
-            scenes.play.add(playObjects.floor_plane)
-
-            return true
-        }
-
-
-        $: {
-            switch (gameState) {
-                case "Load":
-                    currentScene = "load"
-                    loadGame()
-                    dispatch("updateGameState", "Play")
-                case "Play":
-                    currentScene = "play"
-            }
-        }
-
-
+        scenes.load = new THREE.Scene
+        cameras.load = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
+        
         //render handler
     
         function animate() { 
@@ -99,6 +143,18 @@
 
     })
     
+
+    $: {
+
+        switch (gameState) {
+            case "Load":
+                currentScene = "load"
+                dispatch("updateGameState", "Play")
+            case "Play":
+                currentScene = "play"
+                controls.lock()
+        }
+    }
 
 
 </script>
