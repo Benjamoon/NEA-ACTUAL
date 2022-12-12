@@ -9,6 +9,7 @@
 
     $: console.log("Game state changed: ", gameState)
     const updateGameState = (evt)=>{
+        console.log("Got event", evt)
         gameState = evt.detail
     }
 

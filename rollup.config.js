@@ -5,7 +5,7 @@ import livereload from 'rollup-plugin-livereload';
 import { terser } from 'rollup-plugin-terser';
 import css from 'rollup-plugin-css-only';
 
-const production = true;//!process.env.ROLLUP_WATCH;
+const production = false;//!process.env.ROLLUP_WATCH;
 
 function serve() {
 	let server;
@@ -60,7 +60,7 @@ export default {
 
 		// In dev mode, call `npm run start` once
 		// the bundle has been generated
-		!production && serve(),
+		//!production && serve(),
 
 		// Watch the `public` directory and refresh the
 		// browser on changes when not in production

@@ -3,9 +3,9 @@
         "email": "test@email.com",
         "password": "$2b$10$P7LZ3GD/EauM0/.4VD/VLuZSTSW7qKEaKezrl3MiVqn7yrEvv/0tq",
         "settings": {
-            "sound": false,
-            "particle": false,
-            "ultrarender": false
+            "sound": true,
+            "particle": true,
+            "ultrarender": true
         }
     },
     "testusername2": {
