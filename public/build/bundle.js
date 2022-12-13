@@ -54525,7 +54525,7 @@ var app = (function () {
     			canvas = element("canvas");
     			attr_dev(canvas, "id", "renderContent");
     			attr_dev(canvas, "class", "svelte-1ahn2ix");
-    			add_location(canvas, file$2, 234, 0, 7272);
+    			add_location(canvas, file$2, 255, 0, 7821);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -54566,6 +54566,7 @@ var app = (function () {
     	const scenes = {};
     	const cameras = {};
     	const animationThreads = {};
+    	let playerEmpty; //Players flashlight
     	const controlKeysDown = {};
 
     	const setupPlayControls = () => {
@@ -54627,7 +54628,7 @@ var app = (function () {
 
     		if (cameras.play.position.x != lastX || cameras.play.position.y != lastY) {
     			//reset height, disallow height changes (workaround for now)
-    			cameras.play.position.y = 0;
+    			cameras.play.position.y = 2.0;
     		}
     	};
 
@@ -54687,7 +54688,7 @@ var app = (function () {
     		playObjects.floor = new Mesh(floorGeometry, floorMaterial);
     		scenes.play.add(playObjects.floor).position.y = -2;
     		const ceilGeometry = new BoxGeometry(levelSize + 0.01, 0.1, levelSize + 0.01);
-    		const ceilMaterial = CreateMaterialFromPBR("floor", [3, 3]);
+    		const ceilMaterial = CreateMaterialFromPBR("ceil", [6, 6]);
     		ceilMaterial.side = DoubleSide;
     		playObjects.ceil = new Mesh(ceilGeometry, ceilMaterial);
     		playObjects.ceil.translateY(levelWallHeight - 0.1);
@@ -54716,6 +54717,28 @@ var app = (function () {
     		wallMesh.rotateX(MathUtils.degToRad(-90));
     		wallMesh.translateZ(-0.1);
     		scenes.play.add(wallMesh);
+
+    		//PlayerEmpty
+    		playerEmpty = new Group();
+
+    		scenes.play.add(playerEmpty);
+
+    		//Lights
+    		//Ambient
+    		const color = 0xFFFFFF;
+
+    		const intensity = 0.2;
+    		const light = new AmbientLight(color, intensity);
+    		scenes.play.add(light);
+
+    		//SpotLightFlashLightThing
+    		const spotLightColor = 0xFFFFFF;
+
+    		const spotLightintensity = 0.8;
+    		const spotlight = new SpotLight(spotLightColor, spotLightintensity);
+    		playerEmpty.add(spotlight);
+    		scenes.play.add(spotlight.target);
+    		dispatch("updateGameState", "Play");
     	};
 
     	function CreateMaterialFromPBR(name, tiling) {
@@ -54734,7 +54757,7 @@ var app = (function () {
     		textures.ao.wrapT = RepeatWrapping;
     		textures.ao.repeat.set(Tiling[0], Tiling[1]);
 
-    		return new MeshBasicMaterial({
+    		return new MeshPhongMaterial({
     				map: textures.col,
     				aoMap: textures.ao,
     				bumpMap: textures.bump
@@ -54764,6 +54787,7 @@ var app = (function () {
     		scenes,
     		cameras,
     		animationThreads,
+    		playerEmpty,
     		levelSize,
     		levelWallHeight,
     		controlKeysDown,
@@ -54779,6 +54803,7 @@ var app = (function () {
     		if ('currentScene' in $$props) currentScene = $$props.currentScene;
     		if ('controls' in $$props) $$invalidate(1, controls = $$props.controls);
     		if ('renderer' in $$props) renderer = $$props.renderer;
+    		if ('playerEmpty' in $$props) playerEmpty = $$props.playerEmpty;
     	};
 
     	if ($$props && "$$inject" in $$props) {
@@ -54791,13 +54816,7 @@ var app = (function () {
     				switch (gameState) {
     					case "Load":
     						currentScene = "load";
-    						setTimeout(
-    							async () => {
-    								await loadGame();
-    								dispatch("updateGameState", "Play");
-    							},
-    							100
-    						);
+    						loadGame();
     						break;
     					case "Play":
     						console.log("Somehow got to play, couldnt tell ya how");

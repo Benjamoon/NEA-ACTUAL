@@ -14,6 +14,7 @@
     const scenes = {};
     const cameras = {};
     const animationThreads = {};
+    let playerEmpty; //Players flashlight
 
     //Settings
     const levelSize = 30;
@@ -75,7 +76,7 @@
             cameras.play.position.y != lastY
         ) {
             //reset height, disallow height changes (workaround for now)
-            cameras.play.position.y = 0;
+            cameras.play.position.y = 2.0;
             checkCollision();
         }
     };
@@ -154,7 +155,7 @@
         scenes.play.add(playObjects.floor).position.y = -2;
 
         const ceilGeometry = new THREE.BoxGeometry(levelSize+0.01, 0.1, levelSize+0.01);
-        const ceilMaterial = CreateMaterialFromPBR("floor", [3, 3]);
+        const ceilMaterial = CreateMaterialFromPBR("ceil", [6, 6]);
         ceilMaterial.side = THREE.DoubleSide;
         playObjects.ceil = new THREE.Mesh(ceilGeometry, ceilMaterial);
         playObjects.ceil.translateY(levelWallHeight-0.1)
@@ -185,16 +186,36 @@
         wallMesh.rotateX(THREE.MathUtils.degToRad(-90));
         wallMesh.translateZ(-0.1)
         scenes.play.add(wallMesh);
+
+        //PlayerEmpty
+        playerEmpty = new THREE.Group();
+        scenes.play.add(playerEmpty)
+
+        //Lights
+        //Ambient
+        const color = 0xFFFFFF;
+        const intensity = 0.2;
+        const light = new THREE.AmbientLight(color, intensity);
+        scenes.play.add(light)
+
+        
+
+        //SpotLightFlashLightThing
+        const spotLightColor = 0xFFFFFF;
+        const spotLightintensity = 0.8;
+        const spotlight = new THREE.SpotLight(spotLightColor, spotLightintensity);
+        playerEmpty.add(spotlight);
+        scenes.play.add(spotlight.target);
+        
+
+        dispatch("updateGameState", "Play");
     };
 
     $: {
         switch (gameState) {
             case "Load":
                 currentScene = "load";
-                setTimeout(async () => {
-                    await loadGame();
-                    dispatch("updateGameState", "Play");
-                }, 100);
+                loadGame();
                 break;
             case "Play":
                 console.log("Somehow got to play, couldnt tell ya how");
@@ -224,7 +245,7 @@
         textures.ao.wrapS = THREE.RepeatWrapping;
         textures.ao.wrapT = THREE.RepeatWrapping;
         textures.ao.repeat.set(Tiling[0], Tiling[1]);
-        return new THREE.MeshBasicMaterial({
+        return new THREE.MeshPhongMaterial({
             map: textures.col,
             aoMap: textures.ao,
             bumpMap: textures.bump,
