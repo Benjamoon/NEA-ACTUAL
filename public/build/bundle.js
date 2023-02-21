@@ -2744,7 +2744,7 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (97:0) {#if settingsLoading}
+    // (96:0) {#if settingsLoading}
     function create_if_block$3(ctx) {
     	let loader;
     	let current;
@@ -2785,14 +2785,14 @@ var app = (function () {
     		block,
     		id: create_if_block$3.name,
     		type: "if",
-    		source: "(97:0) {#if settingsLoading}",
+    		source: "(96:0) {#if settingsLoading}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (101:4) <CardHeader>
+    // (100:4) <CardHeader>
     function create_default_slot_2(ctx) {
     	let t;
 
@@ -2812,14 +2812,14 @@ var app = (function () {
     		block,
     		id: create_default_slot_2.name,
     		type: "slot",
-    		source: "(101:4) <CardHeader>",
+    		source: "(100:4) <CardHeader>",
     		ctx
     	});
 
     	return block;
     }
 
-    // (105:8) {#each settings as setting}
+    // (104:8) {#each settings as setting}
     function create_each_block(ctx) {
     	let button;
     	let current;
@@ -2832,8 +2832,8 @@ var app = (function () {
     			props: {
     				success: /*settingsValues*/ ctx[0][/*setting*/ ctx[11].value],
     				text: "" + (/*setting*/ ctx[11].label + " | " + (/*settingsValues*/ ctx[0][/*setting*/ ctx[11].value]
-    				? "Enabled"
-    				: "Disabled"))
+    				? 'Enabled'
+    				: 'Disabled'))
     			},
     			$$inline: true
     		});
@@ -2854,8 +2854,8 @@ var app = (function () {
     			if (dirty & /*settingsValues*/ 1) button_changes.success = /*settingsValues*/ ctx[0][/*setting*/ ctx[11].value];
 
     			if (dirty & /*settingsValues*/ 1) button_changes.text = "" + (/*setting*/ ctx[11].label + " | " + (/*settingsValues*/ ctx[0][/*setting*/ ctx[11].value]
-    			? "Enabled"
-    			: "Disabled"));
+    			? 'Enabled'
+    			: 'Disabled'));
 
     			button.$set(button_changes);
     		},
@@ -2877,14 +2877,14 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(105:8) {#each settings as setting}",
+    		source: "(104:8) {#each settings as setting}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (102:4) <CardContent>
+    // (101:4) <CardContent>
     function create_default_slot_1(ctx) {
     	let p;
     	let t1;
@@ -2937,7 +2937,7 @@ var app = (function () {
     			create_component(button0.$$.fragment);
     			t3 = space();
     			create_component(button1.$$.fragment);
-    			add_location(p, file$5, 102, 8, 3226);
+    			add_location(p, file$5, 101, 8, 3304);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -3023,14 +3023,14 @@ var app = (function () {
     		block,
     		id: create_default_slot_1.name,
     		type: "slot",
-    		source: "(102:4) <CardContent>",
+    		source: "(101:4) <CardContent>",
     		ctx
     	});
 
     	return block;
     }
 
-    // (100:0) <Card centered=true>
+    // (99:0) <Card centered="true">
     function create_default_slot(ctx) {
     	let cardheader;
     	let t;
@@ -3103,7 +3103,7 @@ var app = (function () {
     		block,
     		id: create_default_slot.name,
     		type: "slot",
-    		source: "(100:0) <Card centered=true>",
+    		source: "(99:0) <Card centered=\\\"true\\\">",
     		ctx
     	});
 
@@ -3221,9 +3221,9 @@ var app = (function () {
     	]; // Different settings that the user can access
 
     	let settingsValues = {
-    		"sound": true,
-    		"particle": true,
-    		"ultrarender": false
+    		sound: true,
+    		particle: true,
+    		ultrarender: false
     	}; // The default values for these settings
 
     	// Server saved vaues will overwrite these
@@ -3234,6 +3234,9 @@ var app = (function () {
     		$$invalidate(1, savingEnabled = true); // Enable saving because we just changed something
     	};
 
+    	let savingEnabled = false; // Whether or whether not the save buton should be disabled
+    	let settingsLoading = false;
+
     	const save = async () => {
     		// Saves the settings (async as the fetch function is a network request)
     		$$invalidate(2, settingsLoading = "Saving..."); // Start the loader with text "Saving"
@@ -3241,8 +3244,8 @@ var app = (function () {
     		let result = await fetch(`/api/user/${user}/settings/`, {
     			method: "POST",
     			headers: {
-    				'Accept': 'application/json',
-    				'Content-Type': 'application/json'
+    				Accept: "application/json",
+    				"Content-Type": "application/json"
     			},
     			body: JSON.stringify({ jwt: token, settings: settingsValues })
     		});
@@ -3255,9 +3258,6 @@ var app = (function () {
     		}
     	};
 
-    	let savingEnabled = false; // Whether or whether not the save buton should be disabled
-    	let settingsLoading = false;
-
     	onMount(async () => {
     		//Get settings from server
     		$$invalidate(2, settingsLoading = "Fetching settings"); // Give us some status loading text
@@ -3265,8 +3265,8 @@ var app = (function () {
     		let result = await fetch(`/api/user/${user}/settings/`, {
     			method: "GET",
     			headers: {
-    				'Accept': 'application/json',
-    				'Content-Type': 'application/json'
+    				Accept: "application/json",
+    				"Content-Type": "application/json"
     			}
     		});
 
@@ -3327,9 +3327,9 @@ var app = (function () {
     		settings,
     		settingsValues,
     		toggle,
-    		save,
     		savingEnabled,
-    		settingsLoading
+    		settingsLoading,
+    		save
     	});
 
     	$$self.$inject_state = $$props => {
@@ -54525,7 +54525,7 @@ var app = (function () {
     			canvas = element("canvas");
     			attr_dev(canvas, "id", "renderContent");
     			attr_dev(canvas, "class", "svelte-1ahn2ix");
-    			add_location(canvas, file$2, 255, 0, 7821);
+    			add_location(canvas, file$2, 262, 0, 8070);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -54566,7 +54566,7 @@ var app = (function () {
     	const scenes = {};
     	const cameras = {};
     	const animationThreads = {};
-    	let playerEmpty; //Players flashlight
+    	let cameraObjects = {}; //Children of the camera (player)
     	const controlKeysDown = {};
 
     	const setupPlayControls = () => {
@@ -54628,7 +54628,7 @@ var app = (function () {
 
     		if (cameras.play.position.x != lastX || cameras.play.position.y != lastY) {
     			//reset height, disallow height changes (workaround for now)
-    			cameras.play.position.y = 2.0;
+    			cameras.play.position.y = 2;
     		}
     	};
 
@@ -54718,11 +54718,6 @@ var app = (function () {
     		wallMesh.translateZ(-0.1);
     		scenes.play.add(wallMesh);
 
-    		//PlayerEmpty
-    		playerEmpty = new Group();
-
-    		scenes.play.add(playerEmpty);
-
     		//Lights
     		//Ambient
     		const color = 0xFFFFFF;
@@ -54731,13 +54726,16 @@ var app = (function () {
     		const light = new AmbientLight(color, intensity);
     		scenes.play.add(light);
 
-    		//SpotLightFlashLightThing
-    		const spotLightColor = 0xFFFFFF;
+    		//flashlightFlashLightThing
+    		cameraObjects["gun"] = new Mesh(new SphereGeometry(0.1, 3, 3), CreateMaterialFromPBR("wall", [1, 1]));
 
-    		const spotLightintensity = 0.8;
-    		const spotlight = new SpotLight(spotLightColor, spotLightintensity);
-    		playerEmpty.add(spotlight);
-    		scenes.play.add(spotlight.target);
+    		cameraObjects["gun"].position.set(0.2, -0.2, -0.2);
+    		cameras.play.add(cameraObjects["gun"]);
+    		cameraObjects["flashlight"] = new SpotLight(0xffffff);
+    		cameraObjects["flashlight"].target.position.set(0.2, -0.2, -10);
+    		cameraObjects["gun"].add(cameraObjects["flashlight"].target);
+    		cameraObjects["gun"].add(cameraObjects["flashlight"]);
+    		scenes.play.add(cameras.play);
     		dispatch("updateGameState", "Play");
     	};
 
@@ -54787,7 +54785,7 @@ var app = (function () {
     		scenes,
     		cameras,
     		animationThreads,
-    		playerEmpty,
+    		cameraObjects,
     		levelSize,
     		levelWallHeight,
     		controlKeysDown,
@@ -54803,7 +54801,7 @@ var app = (function () {
     		if ('currentScene' in $$props) currentScene = $$props.currentScene;
     		if ('controls' in $$props) $$invalidate(1, controls = $$props.controls);
     		if ('renderer' in $$props) renderer = $$props.renderer;
-    		if ('playerEmpty' in $$props) playerEmpty = $$props.playerEmpty;
+    		if ('cameraObjects' in $$props) cameraObjects = $$props.cameraObjects;
     	};
 
     	if ($$props && "$$inject" in $$props) {

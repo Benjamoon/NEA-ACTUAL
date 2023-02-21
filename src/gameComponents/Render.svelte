@@ -14,7 +14,8 @@
     const scenes = {};
     const cameras = {};
     const animationThreads = {};
-    let playerEmpty; //Players flashlight
+
+    let cameraObjects = {} //Children of the camera (player)
 
     //Settings
     const levelSize = 30;
@@ -76,7 +77,8 @@
             cameras.play.position.y != lastY
         ) {
             //reset height, disallow height changes (workaround for now)
-            cameras.play.position.y = 2.0;
+            cameras.play.position.y = 2;
+
             checkCollision();
         }
     };
@@ -187,10 +189,6 @@
         wallMesh.translateZ(-0.1)
         scenes.play.add(wallMesh);
 
-        //PlayerEmpty
-        playerEmpty = new THREE.Group();
-        scenes.play.add(playerEmpty)
-
         //Lights
         //Ambient
         const color = 0xFFFFFF;
@@ -200,14 +198,23 @@
 
         
 
-        //SpotLightFlashLightThing
-        const spotLightColor = 0xFFFFFF;
-        const spotLightintensity = 0.8;
-        const spotlight = new THREE.SpotLight(spotLightColor, spotLightintensity);
-        playerEmpty.add(spotlight);
-        scenes.play.add(spotlight.target);
-        
+        //flashlightFlashLightThing
 
+        cameraObjects["gun"] = new THREE.Mesh( 
+            new THREE.SphereGeometry( 0.1, 3, 3 ), 
+            CreateMaterialFromPBR("wall", [1,1])
+        );
+
+        cameraObjects["gun"].position.set(0.2, -0.2, -0.2)
+        cameras.play.add(cameraObjects["gun"])
+
+        cameraObjects["flashlight"] = new THREE.SpotLight( 0xffffff );
+        cameraObjects["flashlight"].target.position.set(0.2, -0.2, -10)
+        cameraObjects["gun"].add(cameraObjects["flashlight"].target)
+
+        cameraObjects["gun"].add(cameraObjects["flashlight"])
+
+        scenes.play.add(cameras.play)
         dispatch("updateGameState", "Play");
     };
 

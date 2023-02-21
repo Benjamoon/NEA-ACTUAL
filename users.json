@@ -1,18 +1,11 @@
 {
-    "testusername": {
-        "email": "test@email.com",
-        "password": "$2b$10$P7LZ3GD/EauM0/.4VD/VLuZSTSW7qKEaKezrl3MiVqn7yrEvv/0tq",
+    "ben4594": {
+        "email": "me@benlawrence.me",
+        "password": "$2b$10$uq1ezbSbOD9UiyVRgsLA/uIL2CBzxztCIkpmmxSNVIY2r4gQNhHwC",
         "settings": {
             "sound": true,
             "particle": true,
             "ultrarender": true
-        }
-    },
-    "testusername2": {
-        "email": "testUsername2@email.com",
-        "password": "$2b$10$yeXhZk..24vj2H6FcIXfGuGa95qgUv6wk0lsibDRBEUAns9f/L1ai",
-        "settings": {
-            "test": true
         }
     }
 }
