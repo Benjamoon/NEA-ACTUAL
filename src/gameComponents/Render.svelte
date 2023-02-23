@@ -29,11 +29,21 @@
             console.log("Lock");
         });
 
-        window.addEventListener("mousedown", () => {
+        window.addEventListener("mousedown", (e) => {
             if (gameState == "Play") {
                 controls.lock();
             }
+            if (gameState == "Play" && controls.isLocked) {
+                console.log(e.button)
+                controlKeysDown[e.button] = true;
+            } 
         });
+
+        window.addEventListener("mouseup", (e)=>{
+            if (gameState == "Play" && controls.isLocked) {
+                controlKeysDown[e.button] = false;
+            } 
+        })
 
         window.addEventListener("keydown", (e) => {
             console.log("down", e.key);
@@ -50,6 +60,42 @@
 
     const checkCollision = () => {};
 
+    let lastShot = +new Date();
+
+    const projectileGeoAndMat = {
+        geo: new THREE.SphereGeometry( 0.1, 0.2, 3 ),
+        mat: new THREE.MeshPhongMaterial({
+            shininess: 100,
+            color: 0x0
+        })
+    }
+
+    let projectiles = [] //Current Projectiles In the world
+
+    const attemptShoot = () => {
+        const now = +new Date();
+        if (now - lastShot < 200) { // shooting interval
+            return
+        }
+        lastShot = now;
+
+        const newProjectile = new THREE.Mesh(projectileGeoAndMat.geo, projectileGeoAndMat.mat);
+
+        newProjectile.position.copy(cameras.play.position)
+        newProjectile.rotation.copy(cameras.play.rotation)
+        newProjectile.translateX(0.2)
+        newProjectile.translateY(-0.2)
+        newProjectile.translateZ(-0.2)
+
+        scenes.play.add(newProjectile)
+
+        projectiles.push({
+            object: newProjectile,
+            time: now
+        })
+    }
+
+    
     animationThreads.play = () => {
         const lastX = cameras.play.position.x;
         const lastY = cameras.play.position.x;
@@ -81,6 +127,44 @@
 
             checkCollision();
         }
+        //End of movement
+
+        if (controlKeysDown[0]) { //Left Click
+            attemptShoot()
+        }
+
+        //Handle projectiles
+        const now = +new Date()
+        projectiles.forEach((projectile, index)=>{
+
+            //Perform raycast to see if we hit something in the next jump...
+            var forwardVector = new THREE.Vector3( 0, 0, -1 );
+            forwardVector.applyQuaternion( projectile.object.quaternion );
+            const raycaster = new THREE.Raycaster(projectile.object.position, forwardVector, 0.01, 0.5);
+            const intersects = raycaster.intersectObjects( scenes.play.children );
+
+            if (intersects.length > 0) {
+                const obj = intersects[0]
+
+                console.log("Hit!", obj)
+                scenes.play.remove(projectile.object)
+                delete projectiles[index]
+            }
+
+
+            projectile.object.translateZ(-0.4)
+
+            
+            
+
+            
+            if (now - projectile.time > 2000) { // Older than 2 seconds
+                scenes.play.remove(projectile.object)
+                delete projectiles[index]
+            }
+
+        })
+
     };
 
     function animate() {
@@ -148,6 +232,7 @@
             0.1,
             1000
         );
+        cameras.play.position.y = 2;
         const playObjects = {};
 
         const floorGeometry = new THREE.BoxGeometry(levelSize+0.01, 0.1, levelSize+0.01);
@@ -210,8 +295,8 @@
 
         cameraObjects["flashlight"] = new THREE.SpotLight( 0xffffff );
         cameraObjects["flashlight"].target.position.set(0.2, -0.2, -10)
-        cameraObjects["gun"].add(cameraObjects["flashlight"].target)
 
+        cameraObjects["gun"].add(cameraObjects["flashlight"].target)
         cameraObjects["gun"].add(cameraObjects["flashlight"])
 
         scenes.play.add(cameras.play)

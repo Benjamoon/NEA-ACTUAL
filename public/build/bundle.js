@@ -54525,7 +54525,7 @@ var app = (function () {
     			canvas = element("canvas");
     			attr_dev(canvas, "id", "renderContent");
     			attr_dev(canvas, "class", "svelte-1ahn2ix");
-    			add_location(canvas, file$2, 262, 0, 8070);
+    			add_location(canvas, file$2, 347, 0, 10558);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -54576,9 +54576,20 @@ var app = (function () {
     			console.log("Lock");
     		});
 
-    		window.addEventListener("mousedown", () => {
+    		window.addEventListener("mousedown", e => {
     			if (gameState == "Play") {
     				controls.lock();
+    			}
+
+    			if (gameState == "Play" && controls.isLocked) {
+    				console.log(e.button);
+    				controlKeysDown[e.button] = true;
+    			}
+    		});
+
+    		window.addEventListener("mouseup", e => {
+    			if (gameState == "Play" && controls.isLocked) {
+    				controlKeysDown[e.button] = false;
     			}
     		});
 
@@ -54598,6 +54609,34 @@ var app = (function () {
 
     	const checkCollision = () => {
     		
+    	};
+
+    	let lastShot = +new Date();
+
+    	const projectileGeoAndMat = {
+    		geo: new SphereGeometry(0.1, 0.2, 3),
+    		mat: new MeshPhongMaterial({ shininess: 100, color: 0x0 })
+    	};
+
+    	let projectiles = []; //Current Projectiles In the world
+
+    	const attemptShoot = () => {
+    		const now = +new Date();
+
+    		if (now - lastShot < 200) {
+    			// shooting interval
+    			return;
+    		}
+
+    		lastShot = now;
+    		const newProjectile = new Mesh(projectileGeoAndMat.geo, projectileGeoAndMat.mat);
+    		newProjectile.position.copy(cameras.play.position);
+    		newProjectile.rotation.copy(cameras.play.rotation);
+    		newProjectile.translateX(0.2);
+    		newProjectile.translateY(-0.2);
+    		newProjectile.translateZ(-0.2);
+    		scenes.play.add(newProjectile);
+    		projectiles.push({ object: newProjectile, time: now });
     	};
 
     	animationThreads.play = () => {
@@ -54630,6 +54669,40 @@ var app = (function () {
     			//reset height, disallow height changes (workaround for now)
     			cameras.play.position.y = 2;
     		}
+
+    		//End of movement
+    		if (controlKeysDown[0]) {
+    			//Left Click
+    			attemptShoot();
+    		}
+
+    		//Handle projectiles
+    		const now = +new Date();
+
+    		projectiles.forEach((projectile, index) => {
+    			//Perform raycast to see if we hit something in the next jump...
+    			var forwardVector = new Vector3(0, 0, -1);
+
+    			forwardVector.applyQuaternion(projectile.object.quaternion);
+    			const raycaster = new Raycaster(projectile.object.position, forwardVector, 0.01, 0.5);
+    			const intersects = raycaster.intersectObjects(scenes.play.children);
+
+    			if (intersects.length > 0) {
+    				const obj = intersects[0];
+    				console.log("Hit!", obj);
+    				scenes.play.remove(projectile.object);
+    				delete projectiles[index];
+    			}
+
+    			projectile.object.translateZ(-0.4);
+
+    			if (now - projectile.time > 2000) {
+    				// Older than 2 seconds
+    				scenes.play.remove(projectile.object);
+
+    				delete projectiles[index];
+    			}
+    		});
     	};
 
     	function animate() {
@@ -54681,6 +54754,7 @@ var app = (function () {
     	const loadGame = async () => {
     		scenes.play = new Scene();
     		cameras.play = new PerspectiveCamera(105, window.innerWidth / window.innerHeight, 0.1, 1000);
+    		cameras.play.position.y = 2;
     		const playObjects = {};
     		const floorGeometry = new BoxGeometry(levelSize + 0.01, 0.1, levelSize + 0.01);
     		const floorMaterial = CreateMaterialFromPBR("floor", [3, 3]);
@@ -54791,6 +54865,10 @@ var app = (function () {
     		controlKeysDown,
     		setupPlayControls,
     		checkCollision,
+    		lastShot,
+    		projectileGeoAndMat,
+    		projectiles,
+    		attemptShoot,
     		animate,
     		loadGame,
     		CreateMaterialFromPBR
@@ -54802,6 +54880,8 @@ var app = (function () {
     		if ('controls' in $$props) $$invalidate(1, controls = $$props.controls);
     		if ('renderer' in $$props) renderer = $$props.renderer;
     		if ('cameraObjects' in $$props) cameraObjects = $$props.cameraObjects;
+    		if ('lastShot' in $$props) lastShot = $$props.lastShot;
+    		if ('projectiles' in $$props) projectiles = $$props.projectiles;
     	};
 
     	if ($$props && "$$inject" in $$props) {
