@@ -16,6 +16,7 @@
     const animationThreads = {};
 
     let cameraObjects = {} //Children of the camera (player)
+    let enemies = [] //enemies
 
     //Settings
     const levelSize = 30;
@@ -95,6 +96,20 @@
         })
     }
 
+    var enemyTexture = new THREE.TextureLoader().load( "textures/enemies/0.png" );
+    var enemyMaterial = new THREE.SpriteMaterial( { map: enemyTexture, color: 0xffffff } );
+
+
+    const enemyLoop = ()=> {
+        if (enemies.length <= 10) {
+            console.log("Spawn enemny")
+            var sprite = new THREE.Sprite( enemyMaterial );
+            sprite.scale.set(4, 4, 4)
+            scenes.play.add(sprite)
+            enemies.push(sprite)
+        }
+    }
+
     
     animationThreads.play = () => {
         const lastX = cameras.play.position.x;
@@ -133,6 +148,9 @@
             attemptShoot()
         }
 
+        //Handle enemy movement and spawning
+        enemyLoop()
+
         //Handle projectiles
         const now = +new Date()
         projectiles.forEach((projectile, index)=>{
@@ -140,7 +158,8 @@
             //Perform raycast to see if we hit something in the next jump...
             var forwardVector = new THREE.Vector3( 0, 0, -1 );
             forwardVector.applyQuaternion( projectile.object.quaternion );
-            const raycaster = new THREE.Raycaster(projectile.object.position, forwardVector, 0.01, 0.5);
+            const raycaster = new THREE.Raycaster(projectile.object.position, forwardVector, 0.01, 1);
+            raycaster.camera = cameras.play
             const intersects = raycaster.intersectObjects( scenes.play.children );
 
             if (intersects.length > 0) {
@@ -152,11 +171,7 @@
             }
 
 
-            projectile.object.translateZ(-0.4)
-
-            
-            
-
+            projectile.object.translateZ(-0.85)
             
             if (now - projectile.time > 2000) { // Older than 2 seconds
                 scenes.play.remove(projectile.object)
@@ -293,7 +308,8 @@
         cameraObjects["gun"].position.set(0.2, -0.2, -0.2)
         cameras.play.add(cameraObjects["gun"])
 
-        cameraObjects["flashlight"] = new THREE.SpotLight( 0xffffff );
+        cameraObjects["flashlight"] = new THREE.SpotLight( 0xffffff, 0.5, 67.2, 0.7);
+        cameraObjects["flashlight"].castShadow = true;
         cameraObjects["flashlight"].target.position.set(0.2, -0.2, -10)
 
         cameraObjects["gun"].add(cameraObjects["flashlight"].target)
