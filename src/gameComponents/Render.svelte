@@ -17,6 +17,7 @@
 
     let cameraObjects = {} //Children of the camera (player)
     let enemies = [] //enemies
+    let rerenderEnemies = 0
 
     //Settings
     const levelSize = 30;
@@ -67,7 +68,7 @@
         geo: new THREE.SphereGeometry( 0.1, 0.2, 3 ),
         mat: new THREE.MeshPhongMaterial({
             shininess: 100,
-            color: 0x0
+            color: 0x4b0082
         })
     }
 
@@ -99,15 +100,71 @@
     var enemyTexture = new THREE.TextureLoader().load( "textures/enemies/0.png" );
     var enemyMaterial = new THREE.SpriteMaterial( { map: enemyTexture, color: 0xffffff } );
 
+    const toScreenPosition = (obj, camera, offset) => {
+        var vector = new THREE.Vector3();
+    
+        var widthHalf = 0.5*window.innerWidth;
+        var heightHalf = 0.5*window.innerHeight;
+    
+        obj.updateMatrixWorld();
+        vector.setFromMatrixPosition(obj.matrixWorld);
+        vector.add(offset)
+        vector.project(camera);
+    
+        vector.x = ( vector.x * widthHalf ) + widthHalf;
+        vector.y = - ( vector.y * heightHalf ) + heightHalf;
+    
+        return { 
+            x: vector.x,
+            y: vector.y
+        };
+    };
+
+    const healthBarOffset = new THREE.Vector3(0.0, 2.0, 0.0);
+
+    const enemyColider = {
+      geometry: new THREE.CylinderGeometry( 0.3, 0.3, 1, 32 ), 
+      material: new THREE.MeshBasicMaterial( {color: 0xffff00, transparent: true, opacity: 0} )
+    }
 
     const enemyLoop = ()=> {
+        //Spawn up to a max of 10 enemies
         if (enemies.length <= 10) {
-            console.log("Spawn enemny")
             var sprite = new THREE.Sprite( enemyMaterial );
             sprite.scale.set(4, 4, 4)
+            sprite.position.y = 1.0
+            console.log(sprite.position)
+            //Attach a collider
+            const cylinder = new THREE.Mesh( enemyColider.geometry, enemyColider.material );
+
+            sprite.add(cylinder)
+
+            sprite.isEnemy = true
+            sprite.enemyIndex = enemies.length + 1
+          
             scenes.play.add(sprite)
             enemies.push(sprite)
+            rerenderEnemies = new Date()
         }
+
+        enemies.forEach((enemy)=>{
+            const direction = new THREE.Vector3(Math.random() * 2 - 1, 0, Math.random() * 2 - 1).normalize();
+
+            const posChange = direction.multiplyScalar(0.2)
+
+            enemy.position.add(posChange)
+
+            //Update on screen coords if we are currently rendering
+            if (renderer) {
+              const pos = toScreenPosition(enemy, cameras.play, healthBarOffset)
+  
+              enemy.leftPos = pos.x
+              enemy.topPos = pos.y
+  
+
+              rerenderEnemies = new Date()
+            }
+        })
     }
 
     
@@ -165,6 +222,13 @@
             if (intersects.length > 0) {
                 const obj = intersects[0]
 
+
+                if (obj.object?.parent?.isEnemy == "Sprite") {
+                  console.log("Is enemY!")
+
+                  enemies[obj.object.parent.enemyIndex].health = (enemies[obj.object.parent.enemyIndex].health || 100) - 25
+                }
+
                 console.log("Hit!", obj)
                 scenes.play.remove(projectile.object)
                 delete projectiles[index]
@@ -172,6 +236,10 @@
 
 
             projectile.object.translateZ(-0.85)
+
+
+            //Check if we
+
             
             if (now - projectile.time > 2000) { // Older than 2 seconds
                 scenes.play.remove(projectile.object)
@@ -361,6 +429,12 @@
     }
 </script>
 
+{#key rerenderEnemies}
+  {#each enemies as enemy}
+    <div class="healthbar" style="left: {enemy.leftPos || 0}px; top: {enemy.topPos || 0}px">{enemy.health || 100}hp</div>
+  {/each}
+{/key}
+
 <canvas id="renderContent" />
 
 <style>
@@ -372,4 +446,13 @@
         top: 0;
         z-index: -1;
     }
+
+    .healthbar {
+      position: absolute;
+      z-index: 20;
+
+      color: red;
+      background: black;
+    }
+
 </style>
