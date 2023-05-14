@@ -127,6 +127,8 @@
       material: new THREE.MeshBasicMaterial( {color: 0xffff00, transparent: true, opacity: 0} )
     }
 
+    let enemyColliders = []
+
     const enemyLoop = ()=> {
         //Spawn up to a max of 10 enemies
         if (enemies.length <= 10) {
@@ -134,8 +136,11 @@
             sprite.scale.set(4, 4, 4)
             sprite.position.y = 1.0
             console.log(sprite.position)
+
             //Attach a collider
             const cylinder = new THREE.Mesh( enemyColider.geometry, enemyColider.material );
+            
+            enemyColliders.push(cylinder)
 
             sprite.add(cylinder)
 
@@ -171,6 +176,10 @@
     animationThreads.play = () => {
         const lastX = cameras.play.position.x;
         const lastY = cameras.play.position.x;
+
+        if (enemies.length == 0) {
+            dispatchEvent("updateGameState", "Win")
+        }
 
         let speed = 0.1;
         if (controlKeysDown["shift"]) {
@@ -212,33 +221,41 @@
         const now = +new Date()
         projectiles.forEach((projectile, index)=>{
 
-            //Perform raycast to see if we hit something in the next jump...
+            //Perform raycast to see if we hit something in the next translation...
             var forwardVector = new THREE.Vector3( 0, 0, -1 );
             forwardVector.applyQuaternion( projectile.object.quaternion );
             const raycaster = new THREE.Raycaster(projectile.object.position, forwardVector, 0.01, 1);
             raycaster.camera = cameras.play
-            const intersects = raycaster.intersectObjects( scenes.play.children );
+            const intersects = raycaster.intersectObjects( 
+                [
+                    ...scenes.play.children,
+                    ...enemyColliders
+                ]
+            );
 
             if (intersects.length > 0) {
                 const obj = intersects[0]
 
 
-                if (obj.object?.parent?.isEnemy == "Sprite") {
-                  console.log("Is enemY!")
+                //Check if we hit an enemy
+                if (obj.object?.parent?.isEnemy) {
 
-                  enemies[obj.object.parent.enemyIndex].health = (enemies[obj.object.parent.enemyIndex].health || 100) - 25
+                    //Decrement health
+                    enemies[obj.object.parent.enemyIndex].health = (enemies[obj.object.parent.enemyIndex].health || 100) - 25
+
+                    //Enemy should die
+                    if (enemies[obj.object.parent.enemyIndex].health <= 0) {
+                        scenes.play.remove(obj.object.parent)
+                        delete enemies[obj.object.parent.enemyIndex]
+                    }
                 }
 
-                console.log("Hit!", obj)
                 scenes.play.remove(projectile.object)
                 delete projectiles[index]
             }
 
 
             projectile.object.translateZ(-0.85)
-
-
-            //Check if we
 
             
             if (now - projectile.time > 2000) { // Older than 2 seconds

@@ -7,5 +7,13 @@
             "particle": true,
             "ultrarender": true
         }
+    },
+    "ben45942": {
+        "email": "me@benlawrence.me",
+        "password": "$2b$10$Ph1/zAsMLCOEF3EXxhCc5e1SsPH0e5.e1PfpUV6Z3XhsOyVEiw40K"
+    },
+    "dfgdfg": {
+        "email": "dfsgsdfg",
+        "password": "$2b$10$uTlxCHFu5P0Cus0dU.L.sOJmSRLhfXsMdfUDnGvVGofBs5L0hCfQW"
     }
 }

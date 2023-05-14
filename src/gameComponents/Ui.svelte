@@ -1,12 +1,15 @@
 <script>
+	import WinScreen from './UiComponents/WinScreen.svelte';
     import Menu from "./UiComponents/Menu.svelte"
     import LoadScreen from "./UiComponents/LoadScreen.svelte"
+    import { onMount } from 'svelte';
 
     export let user
     export let token
     export let gameState
 
     export let loadingDebug
+
 
 </script>
 
@@ -16,6 +19,9 @@
     {/if}
     {#if gameState=="Load"}
         <LoadScreen user={user} loadingDebug={loadingDebug} />
+    {/if}
+    {#if gameState=="Win"}
+        <WinScreen />
     {/if}
 </div>
 
